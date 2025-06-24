@@ -59,7 +59,7 @@ export default registerAs(
     keycloak: {
       realm: process.env.KEYCLOAK_REALM || 'personal-blog',
       'auth-server-url':
-        process.env.KEYCLOAK_AUTH_URL || 'http://localhost:8080/auth',
+        process.env.KEYCLOAK_AUTH_URL || 'http://localhost:8080',
       'ssl-required': 'external',
       resource: process.env.KEYCLOAK_CLIENT_ID || 'blog-api',
       'confidential-port': 0,

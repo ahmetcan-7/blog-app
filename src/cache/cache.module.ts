@@ -20,6 +20,6 @@ import * as redisStore from 'cache-manager-redis-store';
     }),
   ],
   providers: [CacheService],
-  exports: [NestCacheModule],
+  exports: [NestCacheModule, CacheService],
 })
 export class CacheModule {}

@@ -9,15 +9,13 @@ interface TokenValidationResult {
   roles: string[];
 }
 
-interface TokenContent {
-  realm_access?: {
-    roles: string[];
-  };
-}
-
-interface KeycloakGrant {
-  access_token: {
-    content: TokenContent;
+interface KeycloakGrant extends KeycloakConnect.Grant {
+  access_token: Token & {
+    content: {
+      realm_access?: {
+        roles: string[];
+      };
+    };
   };
 }
 

@@ -3,16 +3,29 @@ import {
   CanActivate,
   ExecutionContext,
   UnauthorizedException,
+  NotFoundException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { KeycloakService } from '../keycloak.service';
 import { Roles } from '../decorators/roles.decorator';
+import { jwtDecode } from 'jwt-decode';
+import { UsersService } from 'src/blog/users/users.service';
+
+interface DecodedToken {
+  sub: string;
+  realm_access: {
+    roles: string[];
+  };
+  email: string;
+  preferred_username: string;
+  given_name: string;
+  family_name: string;
+}
 
 @Injectable()
 export class KeycloakAuthGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private keycloakService: KeycloakService,
+    private readonly usersService: UsersService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -20,10 +33,6 @@ export class KeycloakAuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-
-    if (!requiredRoles) {
-      return true;
-    }
 
     const request = context.switchToHttp().getRequest();
     const authHeader = request.headers.authorization;
@@ -38,10 +47,39 @@ export class KeycloakAuthGuard implements CanActivate {
     }
 
     try {
-      const { roles } = await this.keycloakService.validateToken(token);
+      const decodedToken = jwtDecode<DecodedToken>(token);
+      let userInDb;
+
+      try {
+        userInDb = await this.usersService.findOne(decodedToken.sub);
+      } catch (error) {
+        if (error instanceof NotFoundException) {
+          userInDb = await this.usersService.create(
+            {
+              email: decodedToken.email,
+              username: decodedToken.preferred_username,
+              firstName: decodedToken.given_name,
+              lastName: decodedToken.family_name,
+            },
+            decodedToken.sub,
+          );
+        } else {
+          throw error;
+        }
+      }
+
+      request.user = userInDb;
+
+      const roles = decodedToken.realm_access?.roles || [];
+      if (!requiredRoles) {
+        return true;
+      }
+
       return requiredRoles.some((role) => roles.includes(role));
     } catch (error) {
-      throw new UnauthorizedException('Invalid token');
+      throw new UnauthorizedException(
+        'Invalid token or user processing failed',
+      );
     }
   }
 }

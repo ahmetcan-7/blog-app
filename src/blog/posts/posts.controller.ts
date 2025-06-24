@@ -19,6 +19,7 @@ import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Post as BlogPost } from './entities/post.entity';
+import { KeycloakAuthGuard } from '../../auth/guards/keycloak-auth.guard';
 
 @ApiTags('posts')
 @Controller('posts')
@@ -26,6 +27,7 @@ export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Post()
+  @UseGuards(KeycloakAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new blog post' })
   @ApiResponse({
@@ -33,7 +35,10 @@ export class PostsController {
     description: 'Post created successfully',
     type: BlogPost,
   })
-  create(@Body() createPostDto: CreatePostDto, @Request() req) {
+  create(
+    @Body() createPostDto: CreatePostDto,
+    @Request() req: { user: { id: string } },
+  ) {
     return this.postsService.create(createPostDto, req.user.id);
   }
 
