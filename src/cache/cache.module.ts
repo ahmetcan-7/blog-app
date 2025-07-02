@@ -22,4 +22,4 @@ import * as redisStore from 'cache-manager-redis-store';
   providers: [CacheService],
   exports: [NestCacheModule, CacheService],
 })
-export class CacheModule {}
+export class AppCacheModule {}

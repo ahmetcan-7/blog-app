@@ -24,7 +24,7 @@ export class PostsService {
   @Cache({ key: 'all_posts' })
   async findAll(): Promise<Post[]> {
     return this.postRepository.find({
-      relations: ['author', 'tags'],
+      relations: ['author'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -33,7 +33,7 @@ export class PostsService {
   async findOne(id: string): Promise<Post> {
     const post = await this.postRepository.findOne({
       where: { id },
-      relations: ['author', 'tags'],
+      relations: ['author'],
     });
 
     if (!post) {
@@ -47,7 +47,7 @@ export class PostsService {
   async findBySlug(slug: string): Promise<Post> {
     const post = await this.postRepository.findOne({
       where: { slug },
-      relations: ['author', 'tags'],
+      relations: ['author'],
     });
 
     if (!post) {
